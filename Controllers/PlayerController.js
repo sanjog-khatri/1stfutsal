@@ -52,9 +52,9 @@ const playerLogin = async (req, res) =>
                 });
         }
         const jwtToken = jwt.sign(
-            {email: player.email, _id: player._id},
+            {email: player.email, role: player.role, _id: player._id},
             process.env.JWT_SECRET,
-            {expiresIn: '72h'}
+            {expiresIn: '1h'}
         )
         res.status(200)
             .json({

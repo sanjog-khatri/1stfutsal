@@ -1,6 +1,5 @@
 const Joi = require('joi');
 
-
 const futsalSchema = Joi.object({
     name: Joi.string().required(),
     location: Joi.string().required(),
@@ -15,12 +14,23 @@ const futsalSchema = Joi.object({
             comment: Joi.string().optional(),
             timestamp: Joi.date().default(Date.now)
         })
-    ).optional()
+    ).optional(),
+    ownerId: Joi.string().required()  
 });
 
 const validateFutsal = (req, res, next) => {
-    const { error } = futsalSchema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
+    console.log('Validating futsal data:', req.body); // Log the data being validated
+    const { error } = futsalSchema.validate(req.body, { abortEarly: false }); // Validate with abortEarly set to false for all errors
+
+    if (error) {
+        console.error('Validation error:', error.details.map(err => err.message).join(', ')); // Log all validation errors
+        return res.status(400).json({
+            message: 'Validation error',
+            errors: error.details.map(err => err.message) // Include all validation errors in the response
+        });
+    }
+
+    console.log('Validation successful. Proceeding to next middleware.');
     next(); 
 };
 
