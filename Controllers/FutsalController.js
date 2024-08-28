@@ -31,15 +31,29 @@ const getFutsalById = async (req, res) => {
 const createFutsal = async (req, res) => {
     try {
         console.log('Creating new futsal with data:', req.body);
+
+        // Extract data from request body
         const { name, location, priceWeekday, priceSaturday, format, tournaments } = req.body;
+
+        // Ensure ownerId is available from authenticated user
+        const ownerId = req.user?.id;
+        if (!ownerId) {
+            console.error('Owner ID is missing from the request');
+            return res.status(400).json({ message: 'Owner ID is required' });
+        }
+
+        // Create new futsal instance
         const newFutsal = new FutsalModel({
             name,
             location,
             priceWeekday,
             priceSaturday,
             format,
-            tournaments
+            tournaments,
+            ownerId // Set the ownerId here
         });
+
+        // Save new futsal to the database
         const savedFutsal = await newFutsal.save();
         console.log('Created new futsal successfully:', savedFutsal);
         res.status(201).json(savedFutsal);
@@ -48,6 +62,7 @@ const createFutsal = async (req, res) => {
         res.status(500).json({ message: 'Error creating futsal', error: err.message });
     }
 };
+
 
 const updateFutsal = async (req, res) => {
     try {
@@ -60,6 +75,12 @@ const updateFutsal = async (req, res) => {
         if (!futsal) {
             console.warn(`Futsal with ID: ${futsalId} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
+        }
+
+        // Ensure futsal.ownerId is defined
+        if (!futsal.ownerId) {
+            console.error(`Futsal with ID: ${futsalId} has no ownerId`);
+            return res.status(500).json({ message: 'Internal server error: Futsal has no ownerId' });
         }
 
         // Check if the user is the owner of the futsal
@@ -78,7 +99,6 @@ const updateFutsal = async (req, res) => {
     }
 };
 
-
 const deleteFutsal = async (req, res) => {
     try {
         console.log(`Deleting futsal with ID: ${req.params.id}`);
@@ -89,6 +109,12 @@ const deleteFutsal = async (req, res) => {
         if (!futsal) {
             console.warn(`Futsal with ID: ${futsalId} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
+        }
+
+        // Ensure futsal.ownerId is defined
+        if (!futsal.ownerId) {
+            console.error(`Futsal with ID: ${futsalId} has no ownerId`);
+            return res.status(500).json({ message: 'Internal server error: Futsal has no ownerId' });
         }
 
         // Check if the user is the owner of the futsal
@@ -106,6 +132,7 @@ const deleteFutsal = async (req, res) => {
         res.status(500).json({ message: 'Error deleting futsal', error: err.message });
     }
 };
+
 
 module.exports = {
     getFutsals,

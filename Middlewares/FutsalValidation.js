@@ -14,8 +14,8 @@ const futsalSchema = Joi.object({
             comment: Joi.string().optional(),
             timestamp: Joi.date().default(Date.now)
         })
-    ).optional(),
-    ownerId: Joi.string().required()  
+    ).optional()
+    // No ownerId here, as it's handled in the controller
 });
 
 const validateFutsal = (req, res, next) => {
