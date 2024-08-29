@@ -6,6 +6,9 @@ const futsalSchema = new mongoose.Schema({
     priceWeekday: { type: Number, min: 0, required: true },
     priceSaturday: { type: Number, min: 0, required: true },
     format: { type: String, enum: ['5A', '6A', '7A'], required: true },
+    openingTime: { type: String, required: true },
+    closingTime: { type: String, required: true },
+    slotDuration: { type: Number, required: true },
     tournaments: [{ type: String }],
     reviews: [{
         playerId: { type: String, required: true },
@@ -13,7 +16,7 @@ const futsalSchema = new mongoose.Schema({
         comment: { type: String },
         timestamp: { type: Date, default: Date.now }
     }],
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // Ensure ownerId is included and required
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // Keep this field in the schema for reference
 });
 
 const FutsalModel = mongoose.model('Futsal', futsalSchema);

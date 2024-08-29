@@ -54,7 +54,7 @@ const playerLogin = async (req, res) =>
         const jwtToken = jwt.sign(
             {email: player.email, role: player.role, _id: player._id},
             process.env.JWT_SECRET,
-            {expiresIn: '1h'}
+            {expiresIn: '24h'}
         )
         res.status(200)
             .json({

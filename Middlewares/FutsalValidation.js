@@ -6,32 +6,27 @@ const futsalSchema = Joi.object({
     priceWeekday: Joi.number().min(0).required(),
     priceSaturday: Joi.number().min(0).required(),
     format: Joi.string().valid('5A', '6A', '7A').required(),
-    tournaments: Joi.array().items(Joi.string()).optional(),
-    reviews: Joi.array().items(
-        Joi.object({
-            playerId: Joi.string().required(),
-            rating: Joi.number().min(1).max(5).required(),
-            comment: Joi.string().optional(),
-            timestamp: Joi.date().default(Date.now)
-        })
-    ).optional()
-    // No ownerId here, as it's handled in the controller
+    openingTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(), // Pattern for 'HH:mm'
+    closingTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(), // Pattern for 'HH:mm'
+    slotDuration: Joi.number().min(1).required(), // Ensure slotDuration is a positive number
+    tournaments: Joi.array().items(Joi.string()),
+    reviews: Joi.array().items(Joi.object({
+        playerId: Joi.string().required(),
+        rating: Joi.number().min(1).max(5).required(),
+        comment: Joi.string(),
+        timestamp: Joi.date()
+    })),
 });
 
 const validateFutsal = (req, res, next) => {
-    console.log('Validating futsal data:', req.body); // Log the data being validated
-    const { error } = futsalSchema.validate(req.body, { abortEarly: false }); // Validate with abortEarly set to false for all errors
-
+    const { error } = futsalSchema.validate(req.body);
     if (error) {
-        console.error('Validation error:', error.details.map(err => err.message).join(', ')); // Log all validation errors
         return res.status(400).json({
             message: 'Validation error',
-            errors: error.details.map(err => err.message) // Include all validation errors in the response
+            errors: error.details.map(detail => detail.message)
         });
     }
-
-    console.log('Validation successful. Proceeding to next middleware.');
-    next(); 
+    next();
 };
 
 module.exports = validateFutsal;

@@ -1,4 +1,6 @@
 const FutsalModel = require('../Models/futsal');
+const { generateTimeSlots } = require('./TimeSlotsController'); // Assuming the generateTimeSlots function is in timeSlotController
+const moment = require('moment');
 
 const getFutsals = async (req, res) => {
     try {
@@ -32,17 +34,14 @@ const createFutsal = async (req, res) => {
     try {
         console.log('Creating new futsal with data:', req.body);
 
-        // Extract data from request body
-        const { name, location, priceWeekday, priceSaturday, format, tournaments } = req.body;
-
-        // Ensure ownerId is available from authenticated user
+        const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration } = req.body;
         const ownerId = req.user?.id;
+
         if (!ownerId) {
             console.error('Owner ID is missing from the request');
             return res.status(400).json({ message: 'Owner ID is required' });
         }
 
-        // Create new futsal instance
         const newFutsal = new FutsalModel({
             name,
             location,
@@ -50,12 +49,27 @@ const createFutsal = async (req, res) => {
             priceSaturday,
             format,
             tournaments,
-            ownerId // Set the ownerId here
+            openingTime,
+            closingTime,
+            slotDuration,
+            ownerId
         });
 
-        // Save new futsal to the database
         const savedFutsal = await newFutsal.save();
         console.log('Created new futsal successfully:', savedFutsal);
+
+        const startTime = moment(openingTime, 'HH:mm');
+        const endTime = moment(closingTime, 'HH:mm');
+        const currentDate = moment();
+        const daysToGenerate = 30;
+
+        for (let i = 0; i < daysToGenerate; i++) {
+            const date = currentDate.clone().add(i, 'days');
+            console.log(`Generating time slots for date: ${date.format('YYYY-MM-DD')}`);
+
+            await generateTimeSlots(savedFutsal._id, date, startTime, endTime, slotDuration, req.user._id);
+        }
+
         res.status(201).json(savedFutsal);
     } catch (err) {
         console.error('Error creating futsal:', err);
@@ -132,7 +146,6 @@ const deleteFutsal = async (req, res) => {
         res.status(500).json({ message: 'Error deleting futsal', error: err.message });
     }
 };
-
 
 module.exports = {
     getFutsals,

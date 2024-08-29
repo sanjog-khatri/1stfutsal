@@ -63,7 +63,7 @@ const ownerLogin = async (req, res) => {
         const jwtToken = jwt.sign(
             { email: owner.email, role: owner.role, _id: owner._id },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '24h' }
         );
         
         console.log(`Owner logged in successfully with email: ${email}`);
