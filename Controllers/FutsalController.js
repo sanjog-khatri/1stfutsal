@@ -16,10 +16,10 @@ const getFutsals = async (req, res) => {
 
 const getFutsalById = async (req, res) => {
     try {
-        console.log(`Fetching futsal with ID: ${req.params.id}`);
-        const futsal = await FutsalModel.findById(req.params.id).populate('tournaments');
+        console.log(`Fetching futsal with ID: ${req.params._id}`);
+        const futsal = await FutsalModel.findById(req.params._id).populate('tournaments');
         if (!futsal) {
-            console.warn(`Futsal with ID: ${req.params.id} not found`);
+            console.warn(`Futsal with ID: ${req.params._id} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
         }
         console.log('Futsal fetched successfully:', futsal);
@@ -35,9 +35,9 @@ const createFutsal = async (req, res) => {
         console.log('Creating new futsal with data:', req.body);
 
         const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration } = req.body;
-        const ownerId = req.user?.id;
+        const owner_id = req.user?._id;
 
-        if (!ownerId) {
+        if (!owner_id) {
             console.error('Owner ID is missing from the request');
             return res.status(400).json({ message: 'Owner ID is required' });
         }
@@ -52,7 +52,7 @@ const createFutsal = async (req, res) => {
             openingTime,
             closingTime,
             slotDuration,
-            ownerId
+            owner: owner_id // Corrected the field name
         });
 
         const savedFutsal = await newFutsal.save();
@@ -67,7 +67,7 @@ const createFutsal = async (req, res) => {
             const date = currentDate.clone().add(i, 'days');
             console.log(`Generating time slots for date: ${date.format('YYYY-MM-DD')}`);
 
-            await generateTimeSlots(savedFutsal._id, date, startTime, endTime, slotDuration, req.user._id);
+            await generateTimeSlots(savedFutsal._id, date, startTime, endTime, slotDuration, owner_id);
         }
 
         res.status(201).json(savedFutsal);
@@ -77,34 +77,29 @@ const createFutsal = async (req, res) => {
     }
 };
 
-
 const updateFutsal = async (req, res) => {
     try {
-        console.log(`Updating futsal with ID: ${req.params.id}`);
-        const futsalId = req.params.id;
+        console.log(`Updating futsal with ID: ${req.params._id}`);
+        const futsal_id = req.params._id;
         const updates = req.body;
 
-        // Find the futsal by ID
-        const futsal = await FutsalModel.findById(futsalId);
+        const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {
-            console.warn(`Futsal with ID: ${futsalId} not found`);
+            console.warn(`Futsal with ID: ${futsal_id} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
         }
 
-        // Ensure futsal.ownerId is defined
-        if (!futsal.ownerId) {
-            console.error(`Futsal with ID: ${futsalId} has no ownerId`);
-            return res.status(500).json({ message: 'Internal server error: Futsal has no ownerId' });
+        if (!futsal.owner) { // Updated to match the corrected schema
+            console.error(`Futsal with ID: ${futsal_id} has no owner`);
+            return res.status(500).json({ message: 'Internal server error: Futsal has no owner' });
         }
 
-        // Check if the user is the owner of the futsal
-        if (futsal.ownerId.toString() !== req.user.id) {
-            console.warn(`User with ID: ${req.user.id} is not the owner of the futsal with ID: ${futsalId}`);
+        if (futsal.owner.toString() !== req.user._id) {
+            console.warn(`User with ID: ${req.user._id} is not the owner of the futsal with ID: ${futsal_id}`);
             return res.status(403).json({ message: 'Forbidden: You are not the owner of this futsal' });
         }
 
-        // Update the futsal
-        const updatedFutsal = await FutsalModel.findByIdAndUpdate(futsalId, updates, { new: true });
+        const updatedFutsal = await FutsalModel.findByIdAndUpdate(futsal_id, updates, { new: true });
         console.log('Futsal updated successfully:', updatedFutsal);
         res.status(200).json(updatedFutsal);
     } catch (err) {
@@ -115,30 +110,26 @@ const updateFutsal = async (req, res) => {
 
 const deleteFutsal = async (req, res) => {
     try {
-        console.log(`Deleting futsal with ID: ${req.params.id}`);
-        const futsalId = req.params.id;
+        console.log(`Deleting futsal with ID: ${req.params._id}`);
+        const futsal_id = req.params._id;
 
-        // Find the futsal by ID
-        const futsal = await FutsalModel.findById(futsalId);
+        const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {
-            console.warn(`Futsal with ID: ${futsalId} not found`);
+            console.warn(`Futsal with ID: ${futsal_id} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
         }
 
-        // Ensure futsal.ownerId is defined
-        if (!futsal.ownerId) {
-            console.error(`Futsal with ID: ${futsalId} has no ownerId`);
-            return res.status(500).json({ message: 'Internal server error: Futsal has no ownerId' });
+        if (!futsal.owner) { // Updated to match the corrected schema
+            console.error(`Futsal with ID: ${futsal_id} has no owner`);
+            return res.status(500).json({ message: 'Internal server error: Futsal has no owner' });
         }
 
-        // Check if the user is the owner of the futsal
-        if (futsal.ownerId.toString() !== req.user.id) {
-            console.warn(`User with ID: ${req.user.id} is not the owner of the futsal with ID: ${futsalId}`);
+        if (futsal.owner.toString() !== req.user._id) {
+            console.warn(`User with ID: ${req.user._id} is not the owner of the futsal with ID: ${futsal_id}`);
             return res.status(403).json({ message: 'Forbidden: You are not the owner of this futsal' });
         }
 
-        // Delete the futsal
-        await FutsalModel.findByIdAndDelete(futsalId);
+        await FutsalModel.findByIdAndDelete(futsal_id);
         console.log('Futsal deleted successfully:', futsal);
         res.status(200).json({ message: 'Futsal deleted successfully' });
     } catch (err) {

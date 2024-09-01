@@ -6,13 +6,11 @@ const PlayerSchema = new Schema({
             type : String,
             required : true,
         },
-
         email : {
             type : String,
             unique : true,
             required : true,
         },
-
         password : {
             type : String,
             required : true,
@@ -23,5 +21,5 @@ const PlayerSchema = new Schema({
         }
 });
 
-const PlayerModel = mongoose.model('players', PlayerSchema);
+const PlayerModel = mongoose.model('Player', PlayerSchema);
 module.exports = PlayerModel;

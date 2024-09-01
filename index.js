@@ -5,7 +5,8 @@ const cors = require('cors');
 const authRouter = require('./Routes/AuthRouter');
 const roleRouter = require('./Routes/RoleRouter');
 const futsalRouter = require('./Routes/FutsalRouter');
-
+const bookingRouter = require('./Routes/BookingRouter');
+const challengeRouter = require('./Routes/ChallengeRouter');
 
 require('dotenv').config();
 require('./Models/db');
@@ -19,7 +20,8 @@ app.use(cors());
 app.use('/role', roleRouter);
 app.use('/auth', authRouter);
 app.use('/futsals', futsalRouter);
-
+app.use('/bookings',bookingRouter);
+app.use('/challenge', challengeRouter);
 
 
 app.listen(PORT, () => {

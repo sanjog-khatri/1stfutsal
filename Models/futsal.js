@@ -11,13 +11,14 @@ const futsalSchema = new mongoose.Schema({
     slotDuration: { type: Number, required: true },
     tournaments: [{ type: String }],
     reviews: [{
-        playerId: { type: String, required: true },
+        player_id: { type: String, required: true },
         rating: { type: Number, min: 1, max: 5, required: true },
         comment: { type: String },
         timestamp: { type: Date, default: Date.now }
     }],
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // Keep this field in the schema for reference
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true } // Corrected reference
 });
+
 
 const FutsalModel = mongoose.model('Futsal', futsalSchema);
 

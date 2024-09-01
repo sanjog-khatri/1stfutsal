@@ -2,15 +2,15 @@ const mongoose = require('mongoose');
 const TimeSlotModel = require('../Models/timeslot');
 const moment = require('moment');
 
-const generateTimeSlots = async (futsalId, date, startTime, endTime, slotDuration) => {
+const generateTimeSlots = async (futsal_id, date, startTime, endTime, slotDuration) => {
     try {
-        console.log(`Generating time slots for Futsal ID: ${futsalId} on date: ${date.format('YYYY-MM-DD')}`);
+        console.log(`Generating time slots for Futsal ID: ${futsal_id} on date: ${date.format('YYYY-MM-DD')}`);
 
         let currentTime = moment(startTime);
         while (currentTime.isBefore(endTime)) {
             const slotEndTime = currentTime.clone().add(slotDuration, 'minutes');
             const newSlot = new TimeSlotModel({
-                futsalId,
+                futsal_id,
                 date: date.toDate(),
                 startTime: currentTime.format('HH:mm'),
                 endTime: slotEndTime.format('HH:mm')
@@ -29,9 +29,9 @@ const generateTimeSlots = async (futsalId, date, startTime, endTime, slotDuratio
 
 const getTimeSlotsByDate = async (req, res) => {
     try {
-        const { futsalId, date } = req.query;
+        const { futsal_id, date } = req.query;
 
-        if (!futsalId || !date) {
+        if (!futsal_id || !date) {
             return res.status(400).json({ message: 'Futsal ID and Date are required' });
         }
 
@@ -44,7 +44,7 @@ const getTimeSlotsByDate = async (req, res) => {
         const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
 
         const timeSlots = await TimeSlotModel.find({
-            futsalId: new mongoose.Types.ObjectId(futsalId),
+            futsal_id: new mongoose.Types.ObjectId(futsal_id),
             date: {
                 $gte: startOfDay,
                 $lte: endOfDay
@@ -61,8 +61,6 @@ const getTimeSlotsByDate = async (req, res) => {
         res.status(500).json({ message: 'Error fetching time slots', error: err.message });
     }
 };
-
-
 
 
 module.exports = {
