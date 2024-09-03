@@ -7,7 +7,7 @@ const ChallengeSchema = new Schema({
    date: { type: Date, required: true }, // Added required validation
    status: { 
        type: String, 
-       enum: ['pending', 'accepted', 'rejected'], 
+       enum: ['pending', 'accepted', 'cancelled'], 
        default: 'pending' // Default status
    },
    booking: { type: Schema.Types.ObjectId, ref: 'Booking', required: true } // Add reference to Booking

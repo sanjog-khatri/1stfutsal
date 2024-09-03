@@ -4,19 +4,19 @@ const router = express.Router();
 const {
     createChallenge,
     acceptChallenge,
-    rejectChallenge
+    cancelChallenge
 } = require('../Controllers/ChallengeController');
 
 const authenticateToken = require('../Middlewares/AuthToken');
 const authorizeRoles = require('../Middlewares/AuthRole');
 
 // Route to create a new challenge
-router.post('/', authenticateToken, createChallenge);
+router.post('/create', authenticateToken, createChallenge);
 
 // Route to accept a challenge
-router.post('/accept/:challengeId', authenticateToken, authorizeRoles(['player']), acceptChallenge);
+router.post('/accept/:challenge_id', authenticateToken, authorizeRoles(['player']), acceptChallenge);
 
 // Route to reject a challenge
-router.post('/reject/:challengeId', authenticateToken, authorizeRoles(['player']), rejectChallenge);
+router.post('/cancel/:challenge_id', authenticateToken, authorizeRoles(['player']), cancelChallenge);
 
 module.exports = router;
