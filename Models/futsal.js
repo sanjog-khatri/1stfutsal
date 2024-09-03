@@ -11,12 +11,12 @@ const futsalSchema = new mongoose.Schema({
     slotDuration: { type: Number, required: true },
     tournaments: [{ type: String }],
     reviews: [{
-        player_id: { type: String, required: true },
+        player_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
         rating: { type: Number, min: 1, max: 5, required: true },
         comment: { type: String },
         timestamp: { type: Date, default: Date.now }
     }],
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true } // Corrected reference
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true }
 });
 
 const FutsalModel = mongoose.model('Futsal', futsalSchema);

@@ -8,6 +8,7 @@ const futsalRouter = require('./Routes/FutsalRouter');
 const bookingRouter = require('./Routes/BookingRouter');
 const challengeRouter = require('./Routes/ChallengeRouter');
 const tournamentRouter = require('./Routes/TournamentRouter');
+const reviewRouter = require('./Routes/ReviewRouter');
 
 require('dotenv').config();
 require('./Models/db');
@@ -24,6 +25,7 @@ app.use('/futsal', futsalRouter);
 app.use('/booking',bookingRouter);
 app.use('/challenge', challengeRouter);
 app.use('/tournament',tournamentRouter);
+app.use('/review',reviewRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
