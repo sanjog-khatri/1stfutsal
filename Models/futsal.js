@@ -19,7 +19,6 @@ const futsalSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true } // Corrected reference
 });
 
-
 const FutsalModel = mongoose.model('Futsal', futsalSchema);
 
 module.exports = FutsalModel;
