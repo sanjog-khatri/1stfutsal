@@ -14,9 +14,9 @@ const authorizeRoles = require('../Middlewares/AuthRole');
 router.post('/', authenticateToken, createChallenge);
 
 // Route to accept a challenge
-router.post('/accept/:challengeId', authenticateToken, authorizeRoles(['owner']), acceptChallenge);
+router.post('/accept/:challengeId', authenticateToken, authorizeRoles(['player']), acceptChallenge);
 
 // Route to reject a challenge
-router.post('/reject/:challengeId', authenticateToken, authorizeRoles(['owner']), rejectChallenge);
+router.post('/reject/:challengeId', authenticateToken, authorizeRoles(['player']), rejectChallenge);
 
 module.exports = router;

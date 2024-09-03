@@ -13,13 +13,13 @@ const {
 const authorizeRoles = require('../Middlewares/AuthRole');
 const authenticateToken = require('../Middlewares/AuthToken');
 
-router.post('/', authenticateToken, createBooking);
-router.get('/player', authenticateToken, getBookingsForPlayer);
+router.post('/create', authenticateToken, createBooking);
+router.get('/get', authenticateToken, getBookingsForPlayer);
 router.get('/search', authenticateToken, getBookingsForDateAndFutsal);
-router.put('/:id', authenticateToken, updateBooking);
-router.delete('/:id',authenticateToken, authorizeRoles(['player']), cancelBooking);
+router.put('/:_id', authenticateToken, updateBooking);
+router.delete('/:_id',authenticateToken, authorizeRoles(['player']), cancelBooking);
 
-router.post('/accept/:bookingId', authenticateToken, authorizeRoles(['owner']), acceptBooking);
-router.post('/reject/:bookingId', authenticateToken, authorizeRoles(['owner']), rejectBooking);
+router.post('/accept/:booking_id', authenticateToken, authorizeRoles(['owner']), acceptBooking);
+router.post('/reject/:booking_id', authenticateToken, authorizeRoles(['owner']), rejectBooking);
 
 module.exports = router;

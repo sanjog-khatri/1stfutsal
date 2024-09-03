@@ -1,22 +1,33 @@
 const BookingModel = require('../Models/booking');
 const FutsalModel = require('../Models/futsal');
 const TimeSlotModel = require('../Models/timeslot');
-// Get bookings for a player
+// Get booking for a player
 const getBookingsForPlayer = async (req, res) => {
     try {
         const user_id = req.user._id; // Extracted from token (can be player or owner)
-        const bookings = await BookingModel.find({ user_id }).populate('futsal');
-        res.status(200).json(bookings);
+        console.log('Fetching booking for user ID:', user_id);
+
+        // Ensure the field name in query matches the schema
+        const booking = await BookingModel.find({ player: user_id }).populate('futsal');
+        console.log('Bookings retrieved:', booking);
+
+        if (booking.length === 0) {
+            return res.status(404).json({ message: 'No booking found' });
+        }
+
+        res.status(200).json(booking);
     } catch (err) {
-        console.error('Error fetching bookings:', err);
+        console.error('Error fetching booking:', err);
         res.status(500).json({
-            message: 'Error fetching bookings',
+            message: 'Error fetching booking',
             error: err.message
         });
     }
 };
 
-// Get bookings for a specific futsal and date
+
+
+// Get booking for a specific futsal and date
 const getBookingsForDateAndFutsal = async (req, res) => {
     try {
         const { futsal_id, date } = req.query;
@@ -25,7 +36,6 @@ const getBookingsForDateAndFutsal = async (req, res) => {
             return res.status(400).json({ message: 'Futsal ID and date are required' });
         }
 
-        // Parse and validate the date
         const queryDate = new Date(date);
         if (isNaN(queryDate.getTime())) {
             return res.status(400).json({ message: 'Invalid date format' });
@@ -34,21 +44,26 @@ const getBookingsForDateAndFutsal = async (req, res) => {
         const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
         const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
 
-        const bookings = await BookingModel.find({
-            futsal_id,
-            date: { $gte: startOfDay, $lte: endOfDay }
-        }).populate('user')
-          .populate('futsal');
+        console.log(`Querying for futsal_id: ${futsal_id}`);
+        console.log(`Date range: ${startOfDay} to ${endOfDay}`);
 
-        if (bookings.length === 0) {
-            return res.status(404).json({ message: 'No bookings found for the specified futsal and date' });
+        const booking = await BookingModel.find({
+            futsal: futsal_id,
+            date: { $gte: startOfDay, $lte: endOfDay },
+            status: 'confirmed'  // Ensure only confirmed booking are retrieved
+        }).populate('player').populate('futsal');
+
+        console.log('Bookings found:', booking);
+
+        if (booking.length === 0) {
+            return res.status(404).json({ message: 'No booking found for the specified futsal and date' });
         }
 
-        res.status(200).json(bookings);
+        res.status(200).json(booking);
     } catch (err) {
-        console.error('Error fetching bookings:', err);
+        console.error('Error fetching booking:', err);
         res.status(500).json({
-            message: 'Error fetching bookings',
+            message: 'Error fetching booking',
             error: err.message
         });
     }
@@ -74,7 +89,7 @@ const createBooking = async (req, res) => {
                 message: 'Missing required fields',
                 missingFields: {
                     date: !date ? 'Date is missing' : undefined,
-                    futsal_id: !futsal_id ? 'Futsal ID is missing' : undefined,
+                    futsal: !futsal_id ? 'Futsal ID is missing' : undefined,
                     slot: !slot ? 'Slot is missing' : undefined,
                 },
             });
@@ -109,7 +124,7 @@ const createBooking = async (req, res) => {
 
         // Log the query parameters
         console.log('Searching for time slot with:', {
-            futsal_id: futsal_id,
+            futsal: futsal_id,
             date: { $gte: startOfDay, $lte: endOfDay },
             startTime: slot,
             isBooked: false
@@ -118,7 +133,7 @@ const createBooking = async (req, res) => {
         // Find and update the time slot
         const timeSlot = await TimeSlotModel.findOneAndUpdate(
             {
-                futsal_id: futsal_id,
+                futsal: futsal_id,
                 date: { $gte: startOfDay, $lte: endOfDay }, // Match any time during the date
                 startTime: slot, // Ensure this matches the stored time slot
                 isBooked: false
@@ -131,7 +146,7 @@ const createBooking = async (req, res) => {
 
         if (!timeSlot) {
             console.error('Time slot not available:', {
-                futsal_id,
+                futsal,
                 date: { $gte: startOfDay, $lte: endOfDay },
                 startTime: slot
             });
@@ -232,7 +247,7 @@ const cancelBooking = async (req, res) => {
 const acceptBooking = async (req, res) => {
     try {
         const { booking_id } = req.params;
-        const ownerId = req.user._id; // Extract the current owner's ID from the token
+        const owner_id = req.user._id; // Extract the current owner's ID from the token
 
         // Find the booking and populate futsal and owner details
         const booking = await BookingModel.findById(booking_id).populate({
@@ -256,8 +271,8 @@ const acceptBooking = async (req, res) => {
         }
 
         // Verify that the owner of the futsal is the one making the request
-        if (booking.futsal.owner._id.toString() !== ownerId) {
-            console.warn('Unauthorized access attempt by owner ID:', ownerId);
+        if (booking.futsal.owner._id.toString() !== owner_id.toString()) {
+            console.warn('Unauthorized access attempt by owner ID:', owner_id);
             return res.status(403).json({ message: 'You are not authorized to accept this booking' });
         }
 
@@ -286,11 +301,12 @@ const acceptBooking = async (req, res) => {
 };
 
 
+
 // Reject a booking (owner/admin action)
 const rejectBooking = async (req, res) => {
     try {
         const { booking_id } = req.params;
-        const ownerId = req.user._id; // Extract the current owner's ID from the token
+        const owner_id = req.user._id; // Extract the current owner's ID from the token
 
         const booking = await BookingModel.findById(booking_id).populate('futsal');
 
@@ -306,7 +322,7 @@ const rejectBooking = async (req, res) => {
             });
         }
 
-        if (booking.futsal.owner.toString() !== ownerId) {
+        if (booking.futsal.owner.toString() !== owner_id) {
             return res.status(403).json({
                 message: 'You are not authorized to reject this booking'
             });

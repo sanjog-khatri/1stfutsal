@@ -84,7 +84,77 @@ const ownerLogin = async (req, res) => {
     }
 }
 
+const updateOwner = async (req, res) => {
+    try {
+        const { email, username, password } = req.body;
+        const owner_id = req.user._id;  // Assuming the user ID is attached to req.user
+        const { id } = req.params;  // Assuming the owner ID is passed as a URL parameter
+
+        // Check if the owner is updating their own account
+        if (owner_id !== id) {
+            return res.status(403).json({
+                message: "You can only update your own account",
+                success: false
+            });
+        }
+
+        const updateFields = {};
+        if (email) updateFields.email = email;
+        if (username) updateFields.username = username;
+        if (password) updateFields.password = await bcrypt.hash(password, 10);
+
+        const updatedOwner = await OwnerModel.findByIdAndUpdate(owner_id, updateFields, { new: true });
+        console.log(`Owner account updated successfully for owner ID: ${owner_id}`);
+        
+        res.status(200).json({
+            message: "Account updated successfully",
+            success: true,
+            updatedOwner
+        });
+    } catch (err) {
+        console.error('Error during account update:', err);
+        res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            error: err.message
+        });
+    }
+}
+
+const deleteOwner = async (req, res) => {
+    try {
+        const owner_id = req.user._id;  // Assuming the user ID is attached to req.user
+        const { id } = req.params;  // Assuming the owner ID is passed as a URL parameter
+
+        // Check if the owner is deleting their own account
+        if (owner_id !== id) {
+            return res.status(403).json({
+                message: "You can only delete your own account",
+                success: false
+            });
+        }
+
+        await OwnerModel.findByIdAndDelete(owner_id);
+        console.log(`Owner account deleted successfully for owner ID: ${owner_id}`);
+        
+        res.status(200).json({
+            message: "Account deleted successfully",
+            success: true
+        });
+    } catch (err) {
+        console.error('Error during account deletion:', err);
+        res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            error: err.message
+        });
+    }
+}
+
+
 module.exports = {
+    ownerSignup,
     ownerLogin,
-    ownerSignup
+    updateOwner,
+    deleteOwner
 }

@@ -19,8 +19,8 @@ app.use(cors());
 
 app.use('/role', roleRouter);
 app.use('/auth', authRouter);
-app.use('/futsals', futsalRouter);
-app.use('/bookings',bookingRouter);
+app.use('/futsal', futsalRouter);
+app.use('/booking',bookingRouter);
 app.use('/challenge', challengeRouter);
 
 

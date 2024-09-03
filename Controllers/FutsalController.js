@@ -16,10 +16,12 @@ const getFutsals = async (req, res) => {
 
 const getFutsalById = async (req, res) => {
     try {
-        console.log(`Fetching futsal with ID: ${req.params._id}`);
-        const futsal = await FutsalModel.findById(req.params._id).populate('tournaments');
+        const futsal_id = req.params._id;
+        console.log(`Fetching futsal with ID: ${futsal_id}`);
+        
+        const futsal = await FutsalModel.findById(futsal_id).populate('tournaments');
         if (!futsal) {
-            console.warn(`Futsal with ID: ${req.params._id} not found`);
+            console.warn(`Futsal with ID: ${futsal_id} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
         }
         console.log('Futsal fetched successfully:', futsal);
@@ -29,6 +31,7 @@ const getFutsalById = async (req, res) => {
         res.status(500).json({ message: 'Error fetching futsal', error: err.message });
     }
 };
+
 
 const createFutsal = async (req, res) => {
     try {
@@ -89,12 +92,15 @@ const updateFutsal = async (req, res) => {
             return res.status(404).json({ message: 'Futsal not found' });
         }
 
-        if (!futsal.owner) { // Updated to match the corrected schema
+        if (!futsal.owner) {
             console.error(`Futsal with ID: ${futsal_id} has no owner`);
             return res.status(500).json({ message: 'Internal server error: Futsal has no owner' });
         }
 
-        if (futsal.owner.toString() !== req.user._id) {
+        console.log('Current user ID:', req.user._id);
+        console.log('Futsal owner ID:', futsal.owner.toString());
+
+        if (futsal.owner.toString() !== req.user._id.toString()) {
             console.warn(`User with ID: ${req.user._id} is not the owner of the futsal with ID: ${futsal_id}`);
             return res.status(403).json({ message: 'Forbidden: You are not the owner of this futsal' });
         }
@@ -108,6 +114,7 @@ const updateFutsal = async (req, res) => {
     }
 };
 
+
 const deleteFutsal = async (req, res) => {
     try {
         console.log(`Deleting futsal with ID: ${req.params._id}`);
@@ -119,12 +126,15 @@ const deleteFutsal = async (req, res) => {
             return res.status(404).json({ message: 'Futsal not found' });
         }
 
-        if (!futsal.owner) { // Updated to match the corrected schema
+        if (!futsal.owner) {
             console.error(`Futsal with ID: ${futsal_id} has no owner`);
             return res.status(500).json({ message: 'Internal server error: Futsal has no owner' });
         }
 
-        if (futsal.owner.toString() !== req.user._id) {
+        console.log('Current user ID:', req.user._id);
+        console.log('Futsal owner ID:', futsal.owner.toString());
+
+        if (futsal.owner.toString() !== req.user._id.toString()) {
             console.warn(`User with ID: ${req.user._id} is not the owner of the futsal with ID: ${futsal_id}`);
             return res.status(403).json({ message: 'Forbidden: You are not the owner of this futsal' });
         }
