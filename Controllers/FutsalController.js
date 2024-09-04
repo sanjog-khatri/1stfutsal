@@ -1,4 +1,5 @@
 const FutsalModel = require('../Models/futsal');
+const TimeSlotModel = require('../Models/timeslot');
 const { generateTimeSlots } = require('./TimeSlotsController'); // Assuming the generateTimeSlots function is in timeSlotController
 const moment = require('moment');
 
@@ -121,12 +122,14 @@ const deleteFutsal = async (req, res) => {
         console.log(`Deleting futsal with ID: ${req.params._id}`);
         const futsal_id = req.params._id;
 
+        // Find the futsal to be deleted
         const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {
             console.warn(`Futsal with ID: ${futsal_id} not found`);
             return res.status(404).json({ message: 'Futsal not found' });
         }
 
+        // Check if the futsal has an owner
         if (!futsal.owner) {
             console.error(`Futsal with ID: ${futsal_id} has no owner`);
             return res.status(500).json({ message: 'Internal server error: Futsal has no owner' });
@@ -135,14 +138,21 @@ const deleteFutsal = async (req, res) => {
         console.log('Current user ID:', req.user._id);
         console.log('Futsal owner ID:', futsal.owner.toString());
 
+        // Check if the current user is the owner of the futsal
         if (futsal.owner.toString() !== req.user._id.toString()) {
             console.warn(`User with ID: ${req.user._id} is not the owner of the futsal with ID: ${futsal_id}`);
             return res.status(403).json({ message: 'Forbidden: You are not the owner of this futsal' });
         }
 
-        await FutsalModel.findByIdAndDelete(futsal_id);
-        console.log('Futsal deleted successfully:', futsal);
-        res.status(200).json({ message: 'Futsal deleted successfully' });
+        // Delete related time slots
+        await TimeSlotModel.deleteMany({ futsal: futsal_id });
+        console.log('Related time slots deleted successfully');
+
+        // Delete the futsal
+        const deletedFutsal = await FutsalModel.findByIdAndDelete(futsal_id);
+        console.log('Futsal deleted successfully:', deletedFutsal);
+
+        res.status(200).json({ message: 'Futsal and its related time slots deleted successfully' });
     } catch (err) {
         console.error('Error deleting futsal:', err);
         res.status(500).json({ message: 'Error deleting futsal', error: err.message });
