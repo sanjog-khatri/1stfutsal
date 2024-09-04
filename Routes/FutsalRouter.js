@@ -28,6 +28,6 @@ router.put('/:_id', authenticateToken, authorizeRoles(['owner']), validateFutsal
 router.delete('/:_id', authenticateToken, authorizeRoles(['owner']), deleteFutsal);
 
 // Route to get time slots for a specific futsal
-router.get('/:_id/timeslots', authenticateToken, getTimeSlotsByDate);
+router.get('/timeslots', authenticateToken, getTimeSlotsByDate);
 
 module.exports = router;
