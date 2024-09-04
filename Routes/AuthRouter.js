@@ -9,13 +9,13 @@ const router = require('express').Router();
 
 router.post('/player/login', playerLoginValidation, playerLogin);
 router.post('/player/signup', playerSignupValidation, playerSignup);
-router.put('/player/:id', authenticateToken, authorizeRoles(['player']), updatePlayer);
-router.delete('/player/:id', authenticateToken, authorizeRoles(['player']), deletePlayer);
+router.put('/player/:_id', authenticateToken, authorizeRoles(['player']), updatePlayer);
+router.delete('/player/:_id', authenticateToken, authorizeRoles(['player']), deletePlayer);
 
 router.post('/owner/login', ownerLoginValidation, ownerLogin);
 router.post('/owner/signup', ownerSignupValidation, ownerSignup);
-router.put('/owner/:id', authenticateToken, authorizeRoles(['owner']), updateOwner);
-router.delete('/owner/:id', authenticateToken, authorizeRoles(['owner']), deleteOwner);
+router.put('/owner/:_id', authenticateToken, authorizeRoles(['owner']), updateOwner);
+router.delete('/owner/:_id', authenticateToken, authorizeRoles(['owner']), deleteOwner);
 
 
 module.exports = router;

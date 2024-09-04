@@ -87,11 +87,11 @@ const ownerLogin = async (req, res) => {
 const updateOwner = async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        const owner_id = req.user._id;  // Assuming the user ID is attached to req.user
-        const { id } = req.params;  // Assuming the owner ID is passed as a URL parameter
+        const owner_id = req.user._id.toString();  // Convert ObjectId to string
+        const _id = req.params._id.toString();  // Convert ObjectId to string if necessary
 
         // Check if the owner is updating their own account
-        if (owner_id !== id) {
+        if (owner_id !== _id) {
             return res.status(403).json({
                 message: "You can only update your own account",
                 success: false
@@ -123,11 +123,11 @@ const updateOwner = async (req, res) => {
 
 const deleteOwner = async (req, res) => {
     try {
-        const owner_id = req.user._id;  // Assuming the user ID is attached to req.user
-        const { id } = req.params;  // Assuming the owner ID is passed as a URL parameter
+        const owner_id = req.user._id.toString();  // Convert ObjectId to string
+        const _id = req.params._id.toString();  // Convert ObjectId to string if necessary
 
         // Check if the owner is deleting their own account
-        if (owner_id !== id) {
+        if (owner_id !== _id) {
             return res.status(403).json({
                 message: "You can only delete your own account",
                 success: false

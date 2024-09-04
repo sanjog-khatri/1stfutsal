@@ -37,7 +37,7 @@ const createFutsal = async (req, res) => {
     try {
         console.log('Creating new futsal with data:', req.body);
 
-        const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration } = req.body;
+        const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration, contact } = req.body;  // Include contact
         const owner_id = req.user?._id;
 
         if (!owner_id) {
@@ -55,7 +55,8 @@ const createFutsal = async (req, res) => {
             openingTime,
             closingTime,
             slotDuration,
-            owner: owner_id // Corrected the field name
+            owner: owner_id, // Corrected the field name
+            contact  // Include contact
         });
 
         const savedFutsal = await newFutsal.save();
@@ -84,7 +85,7 @@ const updateFutsal = async (req, res) => {
     try {
         console.log(`Updating futsal with ID: ${req.params._id}`);
         const futsal_id = req.params._id;
-        const updates = req.body;
+        const updates = req.body;  // Include contact in the updates
 
         const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {

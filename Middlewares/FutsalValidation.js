@@ -16,6 +16,7 @@ const futsalSchema = Joi.object({
         comment: Joi.string(),
         timestamp: Joi.date()
     })),
+    contact: Joi.string().required() // Added contact field as required
 });
 
 const validateFutsal = (req, res, next) => {
