@@ -99,6 +99,7 @@ const createBooking = async (req, res) => {
 
         console.log('Received booking request:', { user_id, date, futsal_id, slot });
 
+        // Validate the provided slot
         const validSlots = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
         if (!validSlots.includes(slot)) {
             console.error('Invalid time slot:', slot);
@@ -108,6 +109,7 @@ const createBooking = async (req, res) => {
             });
         }
 
+        // Find the futsal
         const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {
             console.error('Futsal not found for ID:', futsal_id);
@@ -123,15 +125,15 @@ const createBooking = async (req, res) => {
         const endOfDay = new Date(date);
         endOfDay.setUTCHours(23, 59, 59, 999);
 
-        // Find the available time slot
+        // Find the time slot that is available (ensure it is not booked)
         const timeSlot = await TimeSlotModel.findOneAndUpdate(
             {
                 futsal: futsal_id,
                 date: { $gte: startOfDay, $lte: endOfDay },
                 startTime: slot,
-                isBooked: false
+                isBooked: false // Only check if it's not booked
             },
-            { $set: { isBooked: true } },
+            { $set: { isBooked: true } }, // Mark it as booked
             { new: true }
         );
 
@@ -148,6 +150,7 @@ const createBooking = async (req, res) => {
 
         console.log('Time slot booked:', timeSlot);
 
+        // Create the booking
         const bookingData = {
             date: timeSlot.date,
             futsal: futsal_id,
@@ -155,21 +158,23 @@ const createBooking = async (req, res) => {
             player: user_id
         };
 
-        // Check for existing bookings to prevent duplicate keys
+        // Check if an existing booking for the same player and time slot already exists (excluding cancelled bookings)
         const existingBooking = await BookingModel.findOne({
             futsal: futsal_id,
             player: user_id,
             date: timeSlot.date,
-            timeSlot: timeSlot._id
+            timeSlot: timeSlot._id,
+            status: { $in: ['pending', 'confirmed'] } // Only prevent if status is 'pending' or 'confirmed'
         });
 
         if (existingBooking) {
-            console.error('Booking already exists:', existingBooking);
+            console.error('Booking already exists for the same time slot:', existingBooking);
             return res.status(400).json({
-                message: 'Booking already exists'
+                message: 'Booking already exists for this time slot'
             });
         }
 
+        // Proceed to create the new booking
         const booking = new BookingModel(bookingData);
         await booking.save();
 
@@ -185,6 +190,7 @@ const createBooking = async (req, res) => {
         });
     }
 };
+
 
 
 // Cancel a booking

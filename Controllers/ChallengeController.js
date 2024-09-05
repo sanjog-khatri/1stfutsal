@@ -44,7 +44,6 @@ const createChallenge = async (req, res) => {
     }
 };
 
-
 const acceptChallenge = async (req, res) => {
     try {
         const { challenge_id } = req.params;
@@ -59,9 +58,17 @@ const acceptChallenge = async (req, res) => {
             });
         }
 
+        // Ensure that the challenge is in a pending state
         if (challenge.status !== 'pending') {
             return res.status(400).json({
                 message: 'Challenge is not in a pending state'
+            });
+        }
+
+        // Ensure that the challenge creator cannot accept their own challenge
+        if (challenge.player.toString() === playerId.toString()) {
+            return res.status(403).json({
+                message: 'You cannot accept your own challenge'
             });
         }
 
@@ -89,6 +96,51 @@ const acceptChallenge = async (req, res) => {
     }
 };
 
+const removeChallenge = async (req, res) => {
+    try {
+        const { challenge_id } = req.params;
+        const user_id = req.user ? req.user._id : null; // Get the logged-in user's ID
+
+        if (!user_id) {
+            return res.status(401).json({
+                message: 'User ID is missing from authentication token'
+            });
+        }
+
+        // Find the challenge by ID and populate the player
+        const challenge = await ChallengeModel.findById(challenge_id).populate('player');
+
+        if (!challenge) {
+            return res.status(404).json({
+                message: 'Challenge not found'
+            });
+        }
+
+        // Check if the user is the creator of the challenge
+        if (challenge.player._id.toString() !== user_id.toString()) {
+            return res.status(403).json({
+                message: 'You are not authorized to remove this challenge'
+            });
+        }
+
+        // Remove the challenge by deleting it
+        await ChallengeModel.findByIdAndDelete(challenge_id);
+
+        // Optionally, update the associated booking to remove the challenge reference
+        await BookingModel.findByIdAndUpdate(challenge.booking, {
+            $unset: { challenge: "" } // Remove the challenge reference from the booking
+        });
+
+        res.status(200).json({
+            message: 'Challenge removed successfully',
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: 'Error removing challenge',
+            error: err.message
+        });
+    }
+};
 
 const cancelChallenge = async (req, res) => {
     try {
@@ -102,7 +154,7 @@ const cancelChallenge = async (req, res) => {
         }
 
         // Find the challenge by ID
-        const challenge = await ChallengeModel.findById(challenge_id).populate('player');
+        const challenge = await ChallengeModel.findById(challenge_id);
 
         if (!challenge) {
             return res.status(404).json({
@@ -110,37 +162,49 @@ const cancelChallenge = async (req, res) => {
             });
         }
 
-        // Check if the user is the creator of the challenge
-        if (!challenge.player || challenge.player._id.toString() !== user_id.toString()) {
+        // Check if the user is the one who accepted the challenge
+        if (challenge.acceptedBy && challenge.acceptedBy.toString() !== user_id.toString()) {
             return res.status(403).json({
                 message: 'You are not authorized to cancel this challenge'
             });
         }
 
-        // Set challenge status to 'cancelled'
-        challenge.status = 'cancelled';
+        // Ensure the user is canceling an accepted challenge
+        if (challenge.status !== 'accepted') {
+            return res.status(400).json({
+                message: 'Challenge is not in an accepted state'
+            });
+        }
+
+        // Revert the challenge status to 'pending' and save the change
+        challenge.status = 'pending';
         await challenge.save();
 
-        // Optionally, update the associated booking to reflect the challenge cancellation
+        // Optionally, update the booking status as well if needed
         await BookingModel.findByIdAndUpdate(challenge.booking, {
-            $unset: { challenge: "" } // Remove the challenge reference from the booking
+            $set: { status: 'pending' } // Reset the booking status
+        });
+
+        // Prevent the same user from accepting the challenge again
+        await ChallengeModel.findByIdAndUpdate(challenge._id, {
+            $addToSet: { cancelledBy: user_id } // Add user to a list of people who cancelled the challenge
         });
 
         res.status(200).json({
-            message: 'Challenge cancelled successfully',
+            message: 'Challenge cancelled, status reverted to pending',
             challenge
         });
     } catch (err) {
         res.status(500).json({
             message: 'Error cancelling challenge',
-            error: err.message // Include the error message for clarity
+            error: err.message
         });
     }
 };
 
-
 module.exports = {
     createChallenge,
     acceptChallenge,
+    removeChallenge,
     cancelChallenge
 };
