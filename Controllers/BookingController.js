@@ -1,6 +1,7 @@
 const BookingModel = require('../Models/booking');
 const FutsalModel = require('../Models/futsal');
 const TimeSlotModel = require('../Models/timeslot');
+
 // Get booking for a player
 const getBookingsForPlayer = async (req, res) => {
     try {
@@ -50,7 +51,7 @@ const getBookingsForDateAndFutsal = async (req, res) => {
         const booking = await BookingModel.find({
             futsal: futsal_id,
             date: { $gte: startOfDay, $lte: endOfDay },
-            status: 'confirmed'  // Ensure only confirmed booking are retrieved
+            // Remove or adjust the status filter if needed
         }).populate('player').populate('futsal');
 
         console.log('Bookings found:', booking);
@@ -66,8 +67,9 @@ const getBookingsForDateAndFutsal = async (req, res) => {
             message: 'Error fetching booking',
             error: err.message
         });
-    }
+    }   
 };
+
 
 // Create a booking with slot validation
 
@@ -115,40 +117,29 @@ const createBooking = async (req, res) => {
         }
         console.log('Futsal found:', futsal);
 
-        // Adjust the date to ensure correct comparison
         const startOfDay = new Date(date);
         startOfDay.setUTCHours(0, 0, 0, 0);
 
         const endOfDay = new Date(date);
         endOfDay.setUTCHours(23, 59, 59, 999);
 
-        // Log the query parameters
-        console.log('Searching for time slot with:', {
-            futsal: futsal_id,
-            date: { $gte: startOfDay, $lte: endOfDay },
-            startTime: slot,
-            isBooked: false
-        });
-
-        // Find and update the time slot
+        // Find the available time slot
         const timeSlot = await TimeSlotModel.findOneAndUpdate(
             {
                 futsal: futsal_id,
-                date: { $gte: startOfDay, $lte: endOfDay }, // Match any time during the date
-                startTime: slot, // Ensure this matches the stored time slot
+                date: { $gte: startOfDay, $lte: endOfDay },
+                startTime: slot,
                 isBooked: false
             },
-            {
-                $set: { isBooked: true }
-            },
+            { $set: { isBooked: true } },
             { new: true }
         );
 
         if (!timeSlot) {
             console.error('Time slot not available:', {
-                futsal,
-                date: { $gte: startOfDay, $lte: endOfDay },
-                startTime: slot
+                futsal_id,
+                date,
+                slot
             });
             return res.status(400).json({
                 message: 'Time slot not available'
@@ -160,9 +151,24 @@ const createBooking = async (req, res) => {
         const bookingData = {
             date: timeSlot.date,
             futsal: futsal_id,
-            timeSlot: timeSlot._id, // Link to the time slot ID
+            timeSlot: timeSlot._id,
             player: user_id
         };
+
+        // Check for existing bookings to prevent duplicate keys
+        const existingBooking = await BookingModel.findOne({
+            futsal: futsal_id,
+            player: user_id,
+            date: timeSlot.date,
+            timeSlot: timeSlot._id
+        });
+
+        if (existingBooking) {
+            console.error('Booking already exists:', existingBooking);
+            return res.status(400).json({
+                message: 'Booking already exists'
+            });
+        }
 
         const booking = new BookingModel(bookingData);
         await booking.save();
@@ -181,39 +187,14 @@ const createBooking = async (req, res) => {
 };
 
 
-
-// Update a booking (only update status and other fields if allowed)
-const updateBooking = async (req, res) => {
-    try {
-        const { _id } = req.params;
-        const updatedData = req.body;
-
-        const booking = await BookingModel.findByIdAndUpdate(_id, updatedData, { new: true });
-        if (!booking) {
-            return res.status(404).json({
-                message: 'Booking not found',
-                success: false
-            });
-        }
-        res.status(200).json({
-            message: 'Booking updated',
-            booking
-        });
-    } catch (err) {
-        res.status(500).json({
-            message: 'Error updating booking',
-            error: err.message
-        });
-    }
-};
-
 // Cancel a booking
 const cancelBooking = async (req, res) => {
     try {
         const { _id } = req.params;
         const user_id = req.user._id; // Extract the current user's ID from the token
 
-        const booking = await BookingModel.findById(_id);
+        // Find the booking and populate the timeSlot field
+        const booking = await BookingModel.findById(_id).populate('timeSlot');
 
         if (!booking) {
             return res.status(404).json({
@@ -222,20 +203,32 @@ const cancelBooking = async (req, res) => {
             });
         }
 
-        // Check if the current user is the one who created the booking
-        if (booking.user_id.toString() !== user_id) {
+        // Check if the current user is the player who created the booking
+        if (booking.player.toString() !== user_id.toString()) {
             return res.status(403).json({
                 message: 'You are not authorized to cancel this booking',
                 success: false
             });
         }
 
-        await booking.remove();
+        // Delete the booking
+        await BookingModel.findByIdAndDelete(_id);
+
+        // Update the time slot to set isBooked to false
+        if (booking.timeSlot && booking.timeSlot._id) {
+            await TimeSlotModel.findByIdAndUpdate(
+                booking.timeSlot._id,
+                { $set: { isBooked: false } },
+                { new: true } // Return the updated document
+            );
+        }
+
+        // Respond with success message
         res.status(200).json({
-            message: 'Booking cancelled',
-            booking
+            message: 'Booking cancelled and time slot is now available'
         });
     } catch (err) {
+        console.error('Error cancelling booking:', err);
         res.status(500).json({
             message: 'Error cancelling booking',
             error: err.message
@@ -300,15 +293,14 @@ const acceptBooking = async (req, res) => {
     }
 };
 
-
-
 // Reject a booking (owner/admin action)
 const rejectBooking = async (req, res) => {
     try {
         const { booking_id } = req.params;
         const owner_id = req.user._id; // Extract the current owner's ID from the token
 
-        const booking = await BookingModel.findById(booking_id).populate('futsal');
+        // Find the booking and populate the futsal and timeSlot fields
+        const booking = await BookingModel.findById(booking_id).populate('futsal').populate('timeSlot');
 
         if (!booking) {
             return res.status(404).json({
@@ -322,26 +314,39 @@ const rejectBooking = async (req, res) => {
             });
         }
 
-        if (booking.futsal.owner.toString() !== owner_id) {
+        // Check if the owner is authorized to reject this booking
+        if (booking.futsal.owner.toString() !== owner_id.toString()) {
             return res.status(403).json({
                 message: 'You are not authorized to reject this booking'
             });
         }
 
-        if (booking.status !== 'pending') {
+        // Reject booking regardless of current status (confirmed, pending, etc.)
+        if (booking.status === 'cancelled') {
             return res.status(400).json({
-                message: 'Booking cannot be rejected'
+                message: 'Booking is already cancelled'
             });
         }
 
+        // Set the booking status to 'cancelled'
         booking.status = 'cancelled';
         await booking.save();
+
+        // Update the time slot to make it available again
+        if (booking.timeSlot && booking.timeSlot.isBooked) {
+            await TimeSlotModel.findByIdAndUpdate(
+                booking.timeSlot._id,
+                { $set: { isBooked: false } },
+                { new: true } // Return the updated document
+            );
+        }
 
         res.status(200).json({
             message: 'Booking rejected successfully',
             booking
         });
     } catch (err) {
+        console.error('Error rejecting booking:', err);
         res.status(500).json({
             message: 'Error rejecting booking',
             error: err.message
@@ -353,7 +358,6 @@ module.exports = {
     createBooking,
     getBookingsForPlayer,
     getBookingsForDateAndFutsal,
-    updateBooking,
     cancelBooking,
     acceptBooking,
     rejectBooking

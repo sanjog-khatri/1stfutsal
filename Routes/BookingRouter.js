@@ -4,7 +4,6 @@ const {
     createBooking, 
     getBookingsForPlayer, 
     getBookingsForDateAndFutsal, 
-    updateBooking, 
     cancelBooking, 
     acceptBooking, 
     rejectBooking 
@@ -13,10 +12,9 @@ const {
 const authorizeRoles = require('../Middlewares/AuthRole');
 const authenticateToken = require('../Middlewares/AuthToken');
 
-router.post('/create', authenticateToken, createBooking);
-router.get('/get', authenticateToken, getBookingsForPlayer);
+router.post('/create', authenticateToken, authorizeRoles(['player']), createBooking);
+router.get('/get', authenticateToken, authorizeRoles(['player']), getBookingsForPlayer);
 router.get('/search', authenticateToken, getBookingsForDateAndFutsal);
-router.put('/:_id', authenticateToken, updateBooking);
 router.delete('/:_id',authenticateToken, authorizeRoles(['player']), cancelBooking);
 
 router.post('/accept/:booking_id', authenticateToken, authorizeRoles(['owner']), acceptBooking);

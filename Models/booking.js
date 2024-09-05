@@ -5,7 +5,7 @@ const BookingSchema = new Schema({
     futsal: { type: Schema.Types.ObjectId, ref: 'Futsal', required: true },
     player: { type: Schema.Types.ObjectId, ref: 'Player', required: true },
     date: { type: Date, required: true },
-    timeSlot: { type: String, required: true },
+    timeSlot: { type: Schema.Types.ObjectId, ref: 'TimeSlot', required: true },
     status: { 
         type: String, 
         enum: ['pending', 'confirmed', 'cancelled'], 

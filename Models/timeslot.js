@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const timeSlotSchema = new mongoose.Schema({
+const TimeSlotSchema = new mongoose.Schema({
     futsal: { type: mongoose.Schema.Types.ObjectId, ref: 'Futsal', required: true },
     date: { type: Date, required: true },
     startTime: { type: String, required: true },
@@ -8,6 +8,6 @@ const timeSlotSchema = new mongoose.Schema({
     isBooked: { type: Boolean, default: false }
 });
 
-const TimeSlotModel = mongoose.model('TimeSlot', timeSlotSchema);
+const TimeSlotModel = mongoose.model('TimeSlot', TimeSlotSchema);
 
 module.exports = TimeSlotModel;
