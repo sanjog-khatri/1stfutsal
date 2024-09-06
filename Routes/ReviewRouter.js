@@ -11,9 +11,9 @@ router.post('/create/:futsal_id', authenticateToken, authorizeRoles(['player']),
 router.put('/futsal/:futsal_id/review/:_id', authenticateToken, authorizeRoles(['player']), updateReview);
 
 // Route to remove a specific review by review ID
-router.delete('/remove/:review_id', authenticateToken, authorizeRoles(['player']), removeReview);
+router.delete('/futsal/:futsalId/review/:_id', authenticateToken, authorizeRoles(['player']), removeReview);
 
 // Route to get all reviews for a specific futsal
-router.get('/:futsal_id', authenticateToken, getReviews);
+router.get('/futsal/:_id/reviews', authenticateToken, getReviews);
 
 module.exports = router;
