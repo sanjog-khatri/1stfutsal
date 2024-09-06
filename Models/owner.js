@@ -18,6 +18,10 @@ const OwnerSchema = new Schema({
     role: {
         type: String,
         default: 'owner'
+        },
+    hasCreatedFutsal: {
+            type: Boolean,
+            default: false
         }
 });
 

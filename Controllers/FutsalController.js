@@ -38,7 +38,7 @@ const createFutsal = async (req, res) => {
     try {
         console.log('Creating new futsal with data:', req.body);
 
-        const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration, contact } = req.body;  // Include contact
+        const { name, location, priceWeekday, priceSaturday, format, tournaments, openingTime, closingTime, slotDuration, contact } = req.body;
         const owner_id = req.user?._id;
 
         if (!owner_id) {
@@ -46,6 +46,18 @@ const createFutsal = async (req, res) => {
             return res.status(400).json({ message: 'Owner ID is required' });
         }
 
+        // Validate required fields
+        if (!name || !location || !priceWeekday || !priceSaturday || !format || !openingTime || !closingTime || !slotDuration) {
+            return res.status(400).json({ message: 'All required fields must be provided' });
+        }
+
+        const startTime = moment(openingTime, 'HH:mm', true);
+        const endTime = moment(closingTime, 'HH:mm', true);
+        if (!startTime.isValid() || !endTime.isValid()) {
+            return res.status(400).json({ message: 'Invalid time format for openingTime or closingTime' });
+        }
+
+        // Create the futsal
         const newFutsal = new FutsalModel({
             name,
             location,
@@ -56,15 +68,17 @@ const createFutsal = async (req, res) => {
             openingTime,
             closingTime,
             slotDuration,
-            owner: owner_id, // Corrected the field name
-            contact  // Include contact
+            owner: owner_id,
+            contact
         });
 
         const savedFutsal = await newFutsal.save();
         console.log('Created new futsal successfully:', savedFutsal);
 
-        const startTime = moment(openingTime, 'HH:mm');
-        const endTime = moment(closingTime, 'HH:mm');
+        // Update the owner to reflect that they have created a futsal
+        await OwnerModel.findByIdAndUpdate(owner_id, { hasCreatedFutsal: true });
+
+        // Generate time slots
         const currentDate = moment();
         const daysToGenerate = 30;
 

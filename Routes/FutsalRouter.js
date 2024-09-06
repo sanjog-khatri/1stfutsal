@@ -10,7 +10,7 @@ const {
 const validateFutsal = require('../Middlewares/FutsalValidation');
 const authorizeRoles = require('../Middlewares/AuthRole');
 const authenticateToken = require('../Middlewares/AuthToken');
-const { getTimeSlotsByDate } = require('../Controllers/TimeSlotsController'); // Destructure properly
+const { getTimeSlotsByDate } = require('../Controllers/TimeSlotsController');
 
 // Route to get all futsals
 router.get('/search', authenticateToken, authorizeRoles(['player']), getFutsals);
@@ -28,6 +28,6 @@ router.put('/:_id', authenticateToken, authorizeRoles(['owner']), validateFutsal
 router.delete('/:_id', authenticateToken, authorizeRoles(['owner']), deleteFutsal);
 
 // Route to get time slots for a specific futsal
-router.get('/timeslots', authenticateToken, getTimeSlotsByDate);
+router.get('/timeslots/:futsalId', authenticateToken, getTimeSlotsByDate);
 
 module.exports = router;

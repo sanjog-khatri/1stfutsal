@@ -67,12 +67,38 @@ const ownerLogin = async (req, res) => {
         );
         
         console.log(`Owner logged in successfully with email: ${email}`);
+
+        // Check if the owner has created futsal
+        const futsalCount = await FutsalModel.countDocuments({ owner: owner._id });
+
+        if (futsalCount === 0) {
+            // No futsal created, prompt to create futsal
+            return res.status(200).json({
+                message: "Login success - Please create a futsal",
+                success: true,
+                jwtToken,
+                email,
+                username: owner.username,
+                redirect: '/create-futsal'  // Redirect to create futsal
+            });
+        }
+
+        // Futsal exists, provide options
         res.status(200).json({
             message: "Login success",
             success: true,
             jwtToken,
             email,
-            username: owner.username
+            username: owner.username,
+            redirect: '/dashboard',  // Redirect to dashboard
+            options: {
+                updateFutsal: true,
+                manageBookings: true,
+                seeReviews: true,
+                organizeTournaments: true,
+                createAnotherFutsal: true,
+                manageOtherFutsals: true
+            }
         });
     } catch (err) {
         console.error('Error during login:', err);
