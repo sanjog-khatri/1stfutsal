@@ -2,13 +2,11 @@ const BookingModel = require('../Models/booking');
 const FutsalModel = require('../Models/futsal');
 const TimeSlotModel = require('../Models/timeslot');
 
-// Get booking for a player
 const getBookingsForPlayer = async (req, res) => {
     try {
         const user_id = req.user._id; // Extracted from token (can be player or owner)
         console.log('Fetching booking for user ID:', user_id);
 
-        // Ensure the field name in query matches the schema
         const booking = await BookingModel.find({ player: user_id }).populate('futsal');
         console.log('Bookings retrieved:', booking);
 
@@ -25,8 +23,6 @@ const getBookingsForPlayer = async (req, res) => {
         });
     }
 };
-
-
 
 // Get booking for a specific futsal and date
 const getBookingsForDateAndFutsal = async (req, res) => {
@@ -69,9 +65,6 @@ const getBookingsForDateAndFutsal = async (req, res) => {
         });
     }   
 };
-
-
-// Create a booking with slot validation
 
 const createBooking = async (req, res) => {
     try {
@@ -191,9 +184,6 @@ const createBooking = async (req, res) => {
     }
 };
 
-
-
-// Cancel a booking
 const cancelBooking = async (req, res) => {
     try {
         const { _id } = req.params;
@@ -252,8 +242,8 @@ const acceptBooking = async (req, res) => {
         const booking = await BookingModel.findById(booking_id).populate({
             path: 'futsal',
             populate: {
-                path: 'owner', // Ensure this matches the field name in the Futsal schema
-                model: 'Owner'  // Ensure this matches the actual model name used in your application
+                path: 'owner', 
+                model: 'Owner'  
             }
         });
 
@@ -299,7 +289,6 @@ const acceptBooking = async (req, res) => {
     }
 };
 
-// Reject a booking (owner/admin action)
 const rejectBooking = async (req, res) => {
     try {
         const { booking_id } = req.params;

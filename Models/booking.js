@@ -13,7 +13,7 @@ const BookingSchema = new Schema({
     },
     challenge: { 
         type: Schema.Types.ObjectId, 
-        ref: 'Challenge', // Updated to match the Challenge model
+        ref: 'Challenge', 
         default: null 
     }
 });

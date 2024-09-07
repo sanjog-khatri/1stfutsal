@@ -1,5 +1,5 @@
 const ChallengeModel = require('../Models/challenge');
-const BookingModel = require('../Models/booking'); // Import Booking model
+const BookingModel = require('../Models/booking'); 
 
 const createChallenge = async (req, res) => {
     try {
@@ -21,9 +21,9 @@ const createChallenge = async (req, res) => {
         const challenge = new ChallengeModel({
             futsal,
             player, // Automatically set the logged-in player
-            booking: booking_id, // Include the booking ID
-            date: new Date(), // Set the current date or other logic if needed
-            status: 'pending' // Default status
+            booking: booking_id, 
+            date: new Date(), // Set the current date 
+            status: 'pending'
         });
         await challenge.save();
 
@@ -39,7 +39,7 @@ const createChallenge = async (req, res) => {
     } catch (err) {
         res.status(500).json({
             message: 'Error creating challenge',
-            error: err.message // Include the error message for clarity
+            error: err.message 
         });
     }
 };
@@ -91,7 +91,7 @@ const acceptChallenge = async (req, res) => {
     } catch (err) {
         res.status(500).json({
             message: 'Error accepting challenge',
-            error: err.message // Include the error message for clarity
+            error: err.message 
         });
     }
 };

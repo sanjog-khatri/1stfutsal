@@ -51,7 +51,7 @@ const getReviews = async (req, res) => {
         const futsal_id = req.params._id;
         const futsal = await FutsalModel.findById(futsal_id).populate({
             path: 'reviews.player_id',
-            select: 'username' // Adjust to the fields you want to include
+            select: 'username' 
         });
 
         if (!futsal) {

@@ -84,7 +84,7 @@ const ownerLogin = async (req, res) => {
             jwtToken,
             email,
             username: owner.username,
-            hasCreatedFutsal,  // Include this field
+            hasCreatedFutsal,  
             redirect: hasCreatedFutsal ? '/dashboard' : '/futsal/create',  // Redirect based on status
             options: hasCreatedFutsal ? {
                 updateFutsal: true,
@@ -109,7 +109,7 @@ const updateOwner = async (req, res) => {
     try {
         const { email, username, password } = req.body;
         const owner_id = req.user._id.toString();  // Convert ObjectId to string
-        const _id = req.params._id.toString();  // Convert ObjectId to string if necessary
+        const _id = req.params._id.toString();  
 
         // Check if the owner is updating their own account
         if (owner_id !== _id) {
@@ -145,7 +145,7 @@ const updateOwner = async (req, res) => {
 const deleteOwner = async (req, res) => {
     try {
         const owner_id = req.user._id.toString();  // Convert ObjectId to string
-        const _id = req.params._id.toString();  // Convert ObjectId to string if necessary
+        const _id = req.params._id.toString();  
 
         // Check if the owner is deleting their own account
         if (owner_id !== _id) {

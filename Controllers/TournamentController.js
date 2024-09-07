@@ -1,6 +1,6 @@
 const TournamentModel = require('../Models/tournament');
 const FutsalModel = require('../Models/futsal');
-const moment = require('moment'); // Not used currently, but could be useful for date handling
+const moment = require('moment'); 
 
 const getTournaments = async (req, res) => {
     try {
@@ -71,7 +71,7 @@ const createTournament = async (req, res) => {
             startDate: start,
             endDate: end,
             details,
-            teams // Add teams to the tournament
+            teams 
         });
 
         const savedTournament = await newTournament.save();

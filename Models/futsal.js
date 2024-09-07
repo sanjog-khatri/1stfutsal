@@ -17,7 +17,7 @@ const futsalSchema = new mongoose.Schema({
         timestamp: { type: Date, default: Date.now }
     }],
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true },
-    contact: { type: String, required: true }  // Added contact field
+    contact: { type: String, required: true }  
 });
 
 const FutsalModel = mongoose.model('Futsal', futsalSchema);

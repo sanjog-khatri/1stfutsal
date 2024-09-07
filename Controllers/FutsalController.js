@@ -1,6 +1,6 @@
 const FutsalModel = require('../Models/futsal');
 const TimeSlotModel = require('../Models/timeslot');
-const { generateTimeSlots } = require('./TimeSlotsController'); // Assuming the generateTimeSlots function is in timeSlotController
+const { generateTimeSlots } = require('./TimeSlotsController'); 
 const moment = require('moment');
 
 const getFutsals = async (req, res) => {
@@ -100,7 +100,7 @@ const updateFutsal = async (req, res) => {
     try {
         console.log(`Updating futsal with ID: ${req.params._id}`);
         const futsal_id = req.params._id;
-        const updates = req.body;  // Include contact in the updates
+        const updates = req.body;  
 
         const futsal = await FutsalModel.findById(futsal_id);
         if (!futsal) {
