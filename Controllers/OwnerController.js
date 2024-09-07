@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const OwnerModel = require("../Models/owner");
+const FutsalModel = require('../Models/futsal');
 
 const ownerSignup = async (req, res) => {
     try {
@@ -40,6 +41,7 @@ const ownerLogin = async (req, res) => {
         const { email, password } = req.body;
         console.log(`Attempting to log in owner with email: ${email}`);
         
+        // Fetch owner details
         const owner = await OwnerModel.findOne({ email });
         const errMessage = 'Email or password might be incorrect';
         
@@ -51,6 +53,7 @@ const ownerLogin = async (req, res) => {
             });
         }
         
+        // Check password
         const isPasswordEqual = await bcrypt.compare(password, owner.password);
         if (!isPasswordEqual) {
             console.warn(`Incorrect password for owner with email: ${email}`);
@@ -60,6 +63,7 @@ const ownerLogin = async (req, res) => {
             });
         }
         
+        // Generate JWT token
         const jwtToken = jwt.sign(
             { email: owner.email, role: owner.role, _id: owner._id },
             process.env.JWT_SECRET,
@@ -71,34 +75,25 @@ const ownerLogin = async (req, res) => {
         // Check if the owner has created futsal
         const futsalCount = await FutsalModel.countDocuments({ owner: owner._id });
 
-        if (futsalCount === 0) {
-            // No futsal created, prompt to create futsal
-            return res.status(200).json({
-                message: "Login success - Please create a futsal",
-                success: true,
-                jwtToken,
-                email,
-                username: owner.username,
-                redirect: '/create-futsal'  // Redirect to create futsal
-            });
-        }
-
-        // Futsal exists, provide options
+        // Determine the response based on futsal creation status
+        const hasCreatedFutsal = futsalCount > 0;
+        
         res.status(200).json({
             message: "Login success",
             success: true,
             jwtToken,
             email,
             username: owner.username,
-            redirect: '/dashboard',  // Redirect to dashboard
-            options: {
+            hasCreatedFutsal,  // Include this field
+            redirect: hasCreatedFutsal ? '/dashboard' : '/futsal/create',  // Redirect based on status
+            options: hasCreatedFutsal ? {
                 updateFutsal: true,
                 manageBookings: true,
                 seeReviews: true,
                 organizeTournaments: true,
                 createAnotherFutsal: true,
                 manageOtherFutsals: true
-            }
+            } : {}  // No options if futsal has not been created
         });
     } catch (err) {
         console.error('Error during login:', err);
